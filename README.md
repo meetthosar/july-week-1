@@ -1,0 +1,1 @@
+In exchange for money, farmers can swap their land with lenders
