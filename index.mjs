@@ -16,6 +16,21 @@ const shouldFail = async (fp) => {
   }
 };
 
+const commanFunctions = {
+  seeNotification : (accepted) => {
+    if(accepted)
+      console.log('Bank accepted the swap');
+    else
+      console.log('Bank rejected the swap')
+  },
+  attacherMatched : (accepted) => {
+    if(accepted)
+      console.log('Attacher Matched');
+    else
+      console.log('Attached not matched')
+  }
+};
+
 const startingBalance = stdlib.parseCurrency(100);
 
 const time = stdlib.connector === 'CFX' ? 50 : 10;
@@ -25,8 +40,8 @@ const [ accLandlord, accBank ] =
 console.log('Hello, Landlord and Bank!');
 
 
-const landToken = stdlib.launchToken(accLandlord, "land", "LND");
-const rupeeToken = stdlib.launchToken(accLandlord,'rupee', 'RUPEE');
+const landToken = await stdlib.launchToken(accLandlord, "land", "LND");
+const rupeeToken = await stdlib.launchToken(accLandlord,'rupee', 'RUPEE');
 
 
 if ( stdlib.connector === 'ETH' || stdlib.connector === 'CFX' ) {
@@ -43,8 +58,9 @@ if ( stdlib.connector === 'ETH' || stdlib.connector === 'CFX' ) {
   await accBank.tokenAccept(rupeeToken.id);
 }
 
+
 await landToken.mint(accLandlord, startingBalance.mul(2));
-await accBank.mint(accBank, startingBalance.mul(2));
+await rupeeToken.mint(accBank, startingBalance.mul(2));
 
 console.log('Launching...');
 const ctcLandlord = accLandlord.contract(backend);
@@ -54,10 +70,10 @@ console.log('Starting backends...');
 
 await Promise.all([
   backend.Landlord(ctcLandlord, {
-    ...stdlib.hasRandom,
+    ...commanFunctions,
     proposeSwap : () => {
         console.log("Landlord is proposing Swap")
-        return [landToken, 1, rupeeToken, 2, time];
+        return [landToken.id, 1, rupeeToken.id, 2, time];
     },
     nameTheBank : () => {
       console.log('Providing Bank\'s Address');
@@ -65,7 +81,7 @@ await Promise.all([
     }
   }),
   backend.Bank(ctcBank, {
-    ...stdlib.hasRandom,
+    ...commanFunctions,
     acceptSwap : (...v) => {
       console.log(`Bank accepts swap of`, v);
       return true;
@@ -73,4 +89,4 @@ await Promise.all([
   }),
 ]);
 
-console.log('Goodbye, Landlord and Bank!');
+console.log('Swap Completed!');

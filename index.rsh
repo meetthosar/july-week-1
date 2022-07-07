@@ -1,7 +1,8 @@
 'reach 0.1';
 
 const commanFunctions = {
-  seeNotification : Fun([],Null)
+  seeNotification : Fun([Bool],Null),
+  attacherMatched : Fun([Bool],Null),
 };
 
 export const main = Reach.App(() => {
@@ -35,11 +36,14 @@ export const main = Reach.App(() => {
     assume(landToken != ruppeeToken);
   });
 
+
   Bank.publish(accepted);
   const attacher = new Set();
   attacher.insert(Bank);
-
   commit();
+
+  if(accepted)
+    each([Landlord, Bank], () => interact.seeNotification(accepted));
 
   Bank.pay([[ruppeAmt, ruppeeToken]])
   .when(accepted)
@@ -60,9 +64,11 @@ export const main = Reach.App(() => {
   Landlord.publish(bankAddress);
   
   if(attacher.member(bankAddress)){
+    each([Landlord, Bank], () => interact.attacherMatched(true));
     transfer(ruppeAmt, ruppeeToken).to(Landlord);
     transfer(landAmt, landToken).to(Bank);    
   }else{
+    each([Landlord, Bank], () => interact.attacherMatched(false));
     transfer(landAmt, landToken).to(Landlord);
     transfer(ruppeAmt, ruppeeToken).to(Bank)
   }
